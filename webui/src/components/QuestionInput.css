@@ -1,0 +1,38 @@
+.QuestionForm{
+    width: 80vw;
+}
+
+.container{
+    margin-top: 10vh;
+    display: flex;
+    justify-content: center;
+    align-items:start;
+    height: 120vh;
+}
+
+form input{
+    height: 2vw;
+    width: 40vw;
+    padding: 1vw;
+    margin: 1vw;
+    /* margin-bottom: 4vh; */
+    border: 1px solid;
+    border-radius: 4px;
+}
+
+form button[type="submit"]{
+    display:inline-block;
+    padding: 1vw;
+    font: size 10px;
+    background-color: #cfbebe;
+    color: #000000;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    text-align: center;
+    /* text-decoration; */
+    cursor: pointer;
+  }
+
+  form input[type="submit"]:hover {
+    background-color: #45a049;
+  }
