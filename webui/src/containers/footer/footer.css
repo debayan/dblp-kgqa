@@ -1,0 +1,10 @@
+.App-footer
+{
+  position: sticky;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: #fedcd2;
+  min-height: 5vh;
+  text-align: left;
+}

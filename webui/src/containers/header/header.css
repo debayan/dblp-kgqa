@@ -1,0 +1,24 @@
+.App-header {
+    background:-moz-radial-gradient(circle at 50% 50%, #001D64 0%, #09172B 100%, #071324 101%);
+    background:-webkit-radial-gradient(circle at 50% 50%, #001D64 0%, #09172B 100%, #071324 101%);
+    background:-o-radial-gradient(circle at 50% 50%, #001D64 0%, #09172B 100%, #071324 101%);
+    background:-ms-radial-gradient(circle at 50% 50%, #001D64 0%, #09172B 100%, #071324 101%);
+    background:radial-gradient(circle at 50% 50%, #001D64 0%, #09172B 100%, #071324 101%);
+    min-height: 5vh;
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content:center;
+    font: calc(10px + 2vmin);
+    color: #ffffff;
+    text-align: left;
+  }
+  h1{
+    font-size: 5vh;
+    margin-bottom: 0%;
+  }
+  
+  h2{
+    font-size: 2.5vh;
+    margin-top: 0.4vh;
+  }
