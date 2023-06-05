@@ -1,0 +1,17 @@
+.answer-display {
+    width: 80vw;
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+    padding: 3vw;
+}
+  
+.answer-display h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+  
+.answer-display p {
+  font-size: 16px;
+}
