@@ -1,48 +1,22 @@
 import React, { useState } from 'react';
 import './QuestionInput.css';
 
-function QuestionInput({ onQuestionSubmit }) 
-{
+const QuestionInput = ({ onQuestionSubmit }) => {
   const [question, setQuestion] = useState('');
 
-  const handleInputChange = (event) => 
-  {
-    setQuestion(event.target.value);
-  };
-
-  const handleSubmit = async (event) => 
-  {
+  const handleQuestionSubmit = (event) => {
     event.preventDefault();
-    try
-    {
-      //ADD API URL LATER
-      const response = await fetch('http://localhost:5000/api/endpoint', 
-        {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ question }),
-        });
-
-      const data = await response.json();
-
-      onQuestionSubmit(data.answer);
-    } 
-    
-    catch (error) 
-    {
-      console.error('Error:', error);
-    }
-
-    // setQuestion('');
-  };
+    onQuestionSubmit(question);
+    setQuestion('');
+  };  
 
   return (
     <div className="question-form" class="container">
-      <form onSubmit={handleSubmit}>
+      <form onQuestionSubmit={handleQuestionSubmit}>
         <input
           type="text"
           value={question}
-          onChange={handleInputChange}
+          onChange= {(event) => setQuestion(event.target.value)}
           placeholder="Enter the question"
         />
         <button type="submit">Ask</button>
@@ -50,4 +24,5 @@ function QuestionInput({ onQuestionSubmit })
     </div>
   );
 };
+
 export default QuestionInput;

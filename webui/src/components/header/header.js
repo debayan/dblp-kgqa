@@ -1,7 +1,7 @@
 import React from 'react'
 import './header.css';
 
-function header({headingH1, headingH2, headingH3, headingH4, headingH5, headingH6}) {
+function Header({headingH1, headingH2, headingH3, headingH4, headingH5, headingH6}) {
     return (
         <header className="App-header">
             {headingH1 && <h1>{headingH1}</h1>}
@@ -14,4 +14,4 @@ function header({headingH1, headingH2, headingH3, headingH4, headingH5, headingH
     );
 }
 
-export default header
+export default Header;

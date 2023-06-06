@@ -1,12 +1,19 @@
 .answer-display {
     width: 80vw;
-    margin-top: 20px;
-    border: 1px solid #ccc;
+    margin-top: 5px;
+    border: 1px solid #000000;
     padding: 10px;
     background-color: #f9f9f9;
     padding: 3vw;
 }
-  
+
+.container{
+  margin-top: 2vh;
+  display: flex;
+  justify-content: center;
+  align-items:start;
+}
+
 .answer-display h2 {
   font-size: 18px;
   margin-bottom: 10px;

@@ -3,18 +3,17 @@
 }
 
 .container{
-    margin-top: 10vh;
+    margin-top: 2vh;
     display: flex;
     justify-content: center;
     align-items:start;
-    height: 120vh;
 }
 
 form input{
     width: 40vw;
     padding: 1vw;
     margin: 2vh;
-    margin-bottom: 4vh;
+    margin-bottom: 2vh;
     border: 1px solid;
     border-radius: 4px;
 }
@@ -22,7 +21,6 @@ form input{
 form button[type="submit"]{
     display:inline-block;
     padding: 1vw;
-    font: size 10px;
     background-color: #cfbebe;
     color: #000000;
     border: 0.5px solid #000000;
@@ -33,5 +31,5 @@ form button[type="submit"]{
   }
 
   form input[type="submit"]:hover {
-    background-color: #45a049;
+    background-color: #228b22;
   }
