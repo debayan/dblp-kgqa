@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/api/endpoint', methods=['POST'])
+@cross_origin()
 def process_json():
     data = request.get_json()  # Parse JSON data from the request body
     question = data['question']

@@ -1,0 +1,35 @@
+.QuestionForm{
+    width: 80vw;
+}
+
+.container{
+    margin-top: 2vh;
+    display: flex;
+    justify-content: center;
+    align-items:start;
+}
+
+form input{
+    width: 40vw;
+    padding: 1vw;
+    margin: 2vh;
+    margin-bottom: 2vh;
+    border: 1px solid;
+    border-radius: 4px;
+}
+
+form button[type="submit"]{
+    display:inline-block;
+    padding: 1vw;
+    background-color: #cfbebe;
+    color: #000000;
+    border: 0.5px solid #000000;
+    border-radius: 4px;
+    text-align: center;
+    /* text-decoration; */
+    cursor: pointer;
+  }
+
+  form input[type="submit"]:hover {
+    background-color: #228b22;
+  }
