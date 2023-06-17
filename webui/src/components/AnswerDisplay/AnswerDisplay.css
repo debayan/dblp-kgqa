@@ -1,24 +1,36 @@
-.answer-display {
-    width: 80vw;
-    margin-top: 5px;
-    border: 1px solid #000000;
-    padding: 10px;
-    background-color: #f9f9f9;
-    padding: 3vw;
+.answer-display-container {
+  display: flex;
+  flex-direction: column;
+  align-items:center;
+  width: 40vw;
+  height:auto;
+  padding: 10px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  gap: 10px;
 }
 
-.container{
-  margin-top: 2vh;
+.answer-title {
+  display: flex;
+  padding: 5px;
+  gap: 5px;
+
+}
+
+.answer-textbox-container {
   display: flex;
   justify-content: center;
-  align-items:start;
+  width: 100%;
+  height: auto;
+  resize: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
 }
 
-.answer-display h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-  
-.answer-display p {
-  font-size: 16px;
+.answer-textbox {
+  width: 100%;
+  height:auto;
+  padding: 8px;
 }

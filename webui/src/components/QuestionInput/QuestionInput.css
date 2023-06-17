@@ -1,32 +1,28 @@
 .QuestionForm{
     width: 80vw;
-}
-
-.container{
-    margin-top: 2vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items:start;
+    align-items: center;
 }
 
 form input{
     width: 40vw;
-    padding: 1vw;
-    margin: 2vh;
-    margin-bottom: 2vh;
+    font-size:medium;
+    padding: 0.8rem;
+    margin: 1rem;
     border: 1px solid;
     border-radius: 4px;
 }
 
 form button[type="submit"]{
     display:inline-block;
-    padding: 1vw;
+    padding: 0.8rem;
     background-color: #cfbebe;
     color: #000000;
-    border: 0.5px solid #000000;
+    border: 1px solid #000000;
     border-radius: 4px;
     text-align: center;
-    /* text-decoration; */
     cursor: pointer;
   }
 

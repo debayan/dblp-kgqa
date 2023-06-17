@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 import './QuestionInput.css';
 
-const QuestionInput = ({ onQuestionSubmit }) => {
+const QuestionInput = ({ onSubmit }) => {
   const [question, setQuestion] = useState('');
 
-  const handleQuestionSubmit = (event) => {
+  const handleChange = (event) => {
+    setQuestion(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
     event.preventDefault();
-    onQuestionSubmit(question);
-    setQuestion('');
+
+    onSubmit(question);
   };  
 
   return (
-    <div className="question-form" class="container">
-      <form onQuestionSubmit={handleQuestionSubmit}>
+    <div className="question-form">
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           value={question}
-          onChange= {(event) => setQuestion(event.target.value)}
+          onChange={handleChange}
           placeholder="Enter the question"
         />
         <button type="submit">Ask</button>

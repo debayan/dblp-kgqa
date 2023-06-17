@@ -15,7 +15,7 @@ function App() {
     <div className="App">
       < Header headingH1 = "DBLP-KGQA" headingH2="Question Answering" />
       <QuestionContainer />
-      <Footer footercontent="Copyright All rights reserved 2023" />
+      <Footer footercontent="Copyright All rights reserved 2023" />   
     </div>
   );
 };

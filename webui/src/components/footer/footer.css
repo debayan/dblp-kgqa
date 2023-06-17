@@ -5,6 +5,8 @@
   bottom: 0;
   width: 100%;
   background-color: #fedcd2;
-  min-height: 5vh;
+  min-height: 3vh;
+  max-height: 7%;
   text-align: left;
+  padding-left: 10px;
 }
