@@ -61,7 +61,7 @@ def fetchlabel(ent):
 d = json.loads(open(sys.argv[1]).read())
 
 outarr = []
-
+f = open(sys.argv[2],'w')
 for item in d['questions']:
     q = item['query']['sparql']
     print(item['id'])
@@ -89,16 +89,13 @@ for item in d['questions']:
         print(item['query']['sparql'])
         print(q)
         for k,v in masterdict.items():
-            q = q.replace(k,v)
+            k1 = k.replace('https://','prefix@@')
+            q = q.replace(k,k1)
         print(q)
         print("------------------------------------------------")
     q = q.replace('(',' ( ').replace(')',' ) ')
-    outarr.append({'question':item['question']['string'], 'query':q})
-    outarr.append({'question':item['paraphrased_question']['string'], 'query':q})
+    f.write(json.dumps({'question':item['question']['string'], 'query':q})+'\n')
+    f.write(json.dumps({'question':item['paraphrased_question']['string'], 'query':q})+'\n')
 #    sys.exit(1)
 
-f = open(sys.argv[2],'w')
-f.write(json.dumps(outarr,indent=4))
 f.close()
-
-
