@@ -1,19 +1,22 @@
 # app/Dockerfile
 
-FROM python:3.10
+FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY . .
 
-#RUN apt-get install -y \
-#    build-essential \
-#    software-properties-common \ 
-#    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update 
 
-RUN pip install --upgrade pip
+RUN apt-get install -y \
+    build-essential \
+    software-properties-common \ 
+    && rm -rf /var/lib/apt/lists/*
+
+#RUN pip install --upgrade pip
 
 RUN pip3 install streamlit
+
+COPY . .
 
 EXPOSE 8501
 
