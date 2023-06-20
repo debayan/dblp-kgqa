@@ -13,3 +13,8 @@ Questions:
 curl --header "Content-Type: application/json"  --request POST  --data '{"question":"How many papers has Chris Biemann authored ?"}'  http://localhost:5000/answer
 
 
+Docker:
+
+docker build --no-cache -t debayan_scholarqa_api .
+docker run --name debayan_scholarqa_api -p 5000:5000 debayan_scholarqa_api
+
