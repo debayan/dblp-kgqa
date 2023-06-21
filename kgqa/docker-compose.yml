@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-        api:
+        banerjee_scholarqa_api:
                 build:
                         context: ./kgqa
                         dockerfile: Dockerfile 
@@ -9,7 +9,7 @@ services:
                         - "5000:5000"
                 network_mode: "host"
 
-        streamlit:
+        banerjee_scholarqa_streamlit:
                 build:
                         context: ./streamlit
                         dockerfile: Dockerfile
