@@ -43,6 +43,11 @@ import itertools
 
 from flask import Flask, jsonify, request
 
+if torch.cuda.is_available():
+  device = torch.device("cuda")
+else:
+  device = torch.device("cpu")
+
 logging.getLogger("requests").setLevel(logging.WARNING)
 
 
@@ -197,7 +202,7 @@ def infer(question):
             args.model_name_or_path,
             from_tf=bool(".ckpt" in args.model_name_or_path),
             config=config,
-        ).to('cuda')
+        ).to(device)
 
     if model.config.decoder_start_token_id is None:
         raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
@@ -232,8 +237,8 @@ def infer(question):
     with torch.no_grad():
         input = preprocess_function()
         generated_tokens = model.generate(
-            torch.tensor(input['input_ids']).to('cuda').long(),
-            attention_mask=torch.tensor(input['attention_mask']).to('cuda').long(),
+            torch.tensor(input['input_ids']).to(device).long(),
+            attention_mask=torch.tensor(input['attention_mask']).to(device).long(),
             **gen_kwargs,
         )
         generated_tokens = generated_tokens.cpu().numpy()

@@ -1,8 +1,12 @@
 import streamlit as st
 import requests
+import sys
+
+host = sys.argv[1]
 
 def infer(question):
-    url = "http://localhost:5000/answer"  # Replace with the actual API endpoint URL
+    url = "http://%s:5000/answer"%(host)  # Replace with the actual API endpoint URL
+    print(url)
 
     # Define the request payload
     payload = {

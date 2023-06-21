@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+        banerjee_scholarqa_api:
+                build:
+                        context: ./kgqa
+                        dockerfile: Dockerfile 
+                ports:
+                        - "5000:5000"
+                network_mode: "host"
+
+        banerjee_scholarqa_streamlit:
+                build:
+                        context: ./streamlit
+                        dockerfile: Dockerfile
+                ports:
+                        - "8501:8501"
+                network_mode: "host"
+
