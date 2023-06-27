@@ -1,36 +1,37 @@
 .answer-display-container {
   display: flex;
   flex-direction: column;
-  align-items:center;
-  width: 40vw;
-  height:auto;
+  align-items:flex-start;
+  width: 60vw;
   padding: 10px;
   box-sizing: border-box;
   margin: 0 auto;
-  gap: 10px;
+  gap: 5px;
 }
 
 .answer-title {
   display: flex;
   padding: 5px;
   gap: 5px;
-
+  border: 1px solid #000000;
+  border-radius: 4px;
 }
 
 .answer-textbox-container {
   display: flex;
-  justify-content: center;
   width: 100%;
-  height: auto;
   resize: none;
   border: none;
   outline: none;
   font-size: 16px;
   font-family: Arial, sans-serif;
+  overflow-y: auto;
 }
 
 .answer-textbox {
   width: 100%;
   height:auto;
+  border: 1px solid #000000;
+  border-radius: 4px;
   padding: 8px;
 }

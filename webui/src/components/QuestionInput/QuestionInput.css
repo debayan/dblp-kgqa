@@ -16,16 +16,16 @@ form input{
 }
 
 form button[type="submit"]{
-    display:inline-block;
-    padding: 0.8rem;
-    background-color: #cfbebe;
-    color: #000000;
-    border: 1px solid #000000;
-    border-radius: 4px;
-    text-align: center;
-    cursor: pointer;
-  }
+  display:inline-block;
+  padding: 0.8rem;
+  background-color: #cfbebe;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+}
 
-  form input[type="submit"]:hover {
-    background-color: #228b22;
-  }
+form input[type="submit"]:hover {
+  background-color: #228b22;
+}

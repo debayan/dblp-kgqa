@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import './QuestionContainer.css';
 import axios from 'axios';
-import { AnswerDisplay, QuestionInput } from '../components';
+import { AnswerDisplay, QuestionInput, SparqlDisplay, EntitiesDisplay } from '../../components';
 
 const QuestionContainer = () => {
     const [question, setQuestion] = useState('');
@@ -47,12 +48,16 @@ const QuestionContainer = () => {
     };
 
     return (
-        <div>
+        <div className="QA-container">
             <QuestionInput onSubmit= {handleSubmit} />
             {isLoading ? (
-            <p>Loading...</p>
-            ) : isAnswerVisible ? 
-            (<AnswerDisplay answer = {answer} />
+                <p>Loading...</p>
+            ) : isAnswerVisible ? (
+            <>
+                <AnswerDisplay answer = {answer} question={question}/>
+                <SparqlDisplay sparql = {sparql} />
+                <EntitiesDisplay entities={entities} />
+            </>
             ) : null}
         </div>
     );

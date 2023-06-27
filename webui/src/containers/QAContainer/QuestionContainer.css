@@ -1,0 +1,14 @@
+.QA-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+  }
+  
+  .QA-container > * {
+    margin-bottom: 10px;
+  }
+  
+  .loading-message {
+    margin-top: 20px;
+  }

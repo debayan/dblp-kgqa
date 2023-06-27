@@ -1,0 +1,41 @@
+.entities-display-container {
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+    width: 60vw;
+    padding: 10px;
+    box-sizing: border-box;
+    margin: 0 auto;
+    gap: 5px;
+  }
+  
+  .entities-title {
+    display: flex;
+    padding: 5px;
+    gap: 5px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+  }
+  
+  .entities-textbox-container {
+    display: flex;
+    width: 100%;
+    min-height: 60px;
+    resize: none;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    /* overflow-y: auto;
+    overflow-x: hidden; */
+  }
+  
+  .entities-textbox {
+    width: 100%;
+    height:auto;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    padding: 8px;
+    overflow: hidden;
+  }
+  
