@@ -13,6 +13,11 @@ services:
                 build:
                         context: ./streamlit
                         dockerfile: Dockerfile
+                environment:
+                        - STREAMLIT_SERVER_ENABLECORS=false
+                        - STREAMLIT_SERVER_ENABLE_CORS=false
+                        - STREAMLIT_SERVER_BASEURLPATH=/dblpkgqa
+                        - STREAMLIT_SERVER_BASE_URL_PATH=/dblpkgqa
                 ports:
                         - "8501:8501"
                 network_mode: "host"
