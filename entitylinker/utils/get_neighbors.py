@@ -4,7 +4,7 @@
 from SPARQLWrapper import SPARQLWrapper, JSON, XML, N3, RDF
 
 # determining sparql endpoint
-sparql = SPARQLWrapper("https://dbpedia.org/sparql")
+sparql = SPARQLWrapper("https://dblp-kg.ltdemos.informatik.uni-hamburg.de/sparql")
 
 def get_neighbors(entity):
     query_prefix = """
@@ -21,27 +21,25 @@ def get_neighbors(entity):
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
     """
+    # set return type to JSON
+    sparql.setReturnFormat(JSON)
+    
     # 1. for entity => node relations
     sparql.setQuery(
         query_prefix
         +
         """
-        SELECT distinct ?p ?node WHERE{
-            :""" + given_entity + """ ?p ?node .
+        SELECT distinct ?e ?p ?node WHERE{
+            ?e rdfs:label "%s" .
+            ?e ?p ?node .
         }
         LIMIT 50
-        """
+        """%(given_entity)
     )
-
-    # set return type to JSON
-    sparql.setReturnFormat(JSON)
-
-    # execute sparql query and write result to results
     results = sparql.query().convert()
 
     for result in results["results"]["bindings"]:
-        print(result["p"]["value"] + " = " + result["node"]["value"])
-
+        print(result["e"]["value"] + " : " + result["p"]["value"] + " = " + result["node"]["value"])
     print('\n\n')
 
     # 2. for node => entity relations
@@ -49,21 +47,17 @@ def get_neighbors(entity):
         query_prefix
         +
         """
-        SELECT distinct ?node ?p WHERE{
-            ?node ?p :""" + given_entity + """ .
+        SELECT distinct ?node ?p ?e WHERE{
+            ?e rdfs:label "%s" .
+            ?node ?p ?e .
         }
         LIMIT 50
-        """
+        """%(given_entity)
     )
-
-    # set return type to JSON
-    sparql.setReturnFormat(JSON)
-
-    # execute sparql query and write result to results
     results = sparql.query().convert()
 
     for result in results["results"]["bindings"]:
-        print(result["node"]["value"] + " = " + result["p"]["value"])
+        print(result["node"]["value"] + " : " + result["p"]["value"] + " = " + result["e"]["value"])
 
 # take entity label as input
 given_entity = input('Enter entity label:\n')
