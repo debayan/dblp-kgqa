@@ -16,8 +16,8 @@ services:
                 environment:
                         - STREAMLIT_SERVER_ENABLECORS=false
                         - STREAMLIT_SERVER_ENABLE_CORS=false
-                        - STREAMLIT_SERVER_BASEURLPATH=/dblpkgqa
-                        - STREAMLIT_SERVER_BASE_URL_PATH=/dblpkgqa
+                        - STREAMLIT_SERVER_BASEURLPATH=/scholarqa
+                        - STREAMLIT_SERVER_BASE_URL_PATH=/scholarqa
                 ports:
                         - "8501:8501"
                 network_mode: "host"

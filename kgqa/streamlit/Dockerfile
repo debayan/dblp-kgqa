@@ -20,4 +20,4 @@ COPY . .
 
 EXPOSE 8501
 
-ENTRYPOINT ["streamlit", "run", "home.py", "localhost"]
+ENTRYPOINT ["streamlit", "run", "Home.py", "localhost"]
