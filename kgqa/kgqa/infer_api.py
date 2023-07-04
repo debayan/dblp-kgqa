@@ -267,10 +267,11 @@ def infer(question):
         original_inputs = tokenizer.batch_decode(input["input_ids"], skip_special_tokens=True)
         print(original_inputs)
         nonempty = False
-        beamoutputs = [] 
+        beamoutputs = []
         for beams,original_input in zip(beamed_preds,original_inputs):
             beamitem = {}
             queryresult = []
+            linked_entities = []
             for beam in beams:
                 print(beam)
                 pred = beam
@@ -283,10 +284,11 @@ def infer(question):
                     #ent = resolveentity(label,enttype)
                     if not entities:
                         print("entity could not be linked for ",entlabel)
-                        beamoutputs.append({'query':pred,'answer':None, 'error':'No entity could be linked for %s'%entlabel})
+                        beamoutputs.append({'entities':[],'query':pred,'answer':None, 'error':'No entity could be linked for %s'%entlabel})
                         return beamoutputs
                     else:
                         ent = entities[0]
+                        linked_entities.append(ent)
                         print("linked entity is ",ent," for ",entlabel)
                         print("replacing ...")
                         print(pred)
@@ -294,7 +296,7 @@ def infer(question):
                         print(pred)
                 response = sparqlquery(pred)
                 print("response: ",response)
-                beamoutputs.append({'query':pred,'answer':response, 'error':None})
+                beamoutputs.append({'query':pred,'answer':response, 'error':None, 'entities': linked_entities})
         return beamoutputs
 
 
