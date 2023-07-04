@@ -296,7 +296,7 @@ def infer(question):
                         print(pred)
                 response = sparqlquery(pred)
                 print("response: ",response)
-                beamoutputs.append({'query':pred,'answer':response, 'error':None, 'entities': linked_entities})
+                beamoutputs.append({'query':pred,'answer':response, 'error':None, 'entities': list(set(linked_entities))})
         return beamoutputs
 
 
