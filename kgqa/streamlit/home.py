@@ -34,16 +34,16 @@ with col2:
             response = infer(question)
             resp = response['output'][0]
             if resp['entities']:
-                st.write("Entities:")
+                st.write("**Entities:**")
                 for ent in resp['entities']:
                     st.write(ent)
             else:
                 st.write("No entities detected")
             if resp['query']:
-                st.write("SPARQL Query:")
+                st.write("**SPARQL Query:**")
                 st.write(resp['query'])
             if resp['answer']:
-                st.write("Answer:")
+                st.write("**Answer:**")
                 st.write(resp['answer'])
             else:
                 st.write("No answer could be fetched")
@@ -61,16 +61,16 @@ for idx,button in enumerate(buttons):
             response = infer(default_questions[idx])
             resp = response['output'][0]
             if resp['entities']:
-                st.write("Entities:")
+                st.write("**Entities:**")
                 for ent in resp['entities']:
                     st.write(ent)
             else:
                 st.write("No entities detected")
             if resp['query']:
-                st.write("SPARQL Query:")
+                st.write("**SPARQL Query:**")
                 st.write(resp['query'])
             if resp['answer']:
-                st.write("Answer:")
+                st.write("**Answer:**")
                 st.write(resp['answer'])
             else:
                 st.write("No answer could be fetched")
