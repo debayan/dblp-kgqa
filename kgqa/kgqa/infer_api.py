@@ -40,6 +40,7 @@ from flask_cors import CORS, cross_origin
 from transformers.utils import get_full_repo_name, is_offline_mode
 from transformers.utils.versions import require_version
 import itertools
+from elasticsearch import Elasticsearch
 
 from flask import Flask, jsonify, request
 
@@ -53,6 +54,8 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 require_version("datasets>=1.8.0", "To fix: pip install -r examples/pytorch/summarization/requirements.txt")
+
+es = Elasticsearch("http://ltcpu2:2200")
 
 # You should update this to your particular problem to have better documentation of `model_type`
 MODEL_CONFIG_CLASSES = list(MODEL_MAPPING.keys())
@@ -138,6 +141,17 @@ def sparqlquery(query):
         print(err)
         return ''
 
+def resolveentity_es(label, enttype):
+    try:
+        resp = es.search(index="dblplabelsindex01", query={"match":{"label":{"query":label}}})
+        print(resp)
+        entities = []
+        for source in resp['hits']['hits']:
+            entities.append(source['_source']['entity'])
+        return entities
+    except Exception as err:
+        print(err)
+        return []
 
 
 
@@ -253,10 +267,11 @@ def infer(question):
         original_inputs = tokenizer.batch_decode(input["input_ids"], skip_special_tokens=True)
         print(original_inputs)
         nonempty = False
-        beamoutputs = [] 
+        beamoutputs = []
         for beams,original_input in zip(beamed_preds,original_inputs):
             beamitem = {}
             queryresult = []
+            linked_entities = []
             for beam in beams:
                 print(beam)
                 pred = beam
@@ -265,18 +280,23 @@ def infer(question):
                 for entlabel in entlabels:
                     label,enttype = entlabel.split(' : ')
                     print(label,enttype)
-                    ent = resolveentity(label,enttype)
-                    if not ent:
+                    entities = resolveentity_es(label,enttype)
+                    #ent = resolveentity(label,enttype)
+                    if not entities:
                         print("entity could not be linked for ",entlabel)
+                        beamoutputs.append({'entities':[],'query':pred,'answer':None, 'error':'No entity could be linked for %s'%entlabel})
+                        return beamoutputs
                     else:
+                        ent = entities[0]
+                        linked_entities.append(ent)
                         print("linked entity is ",ent," for ",entlabel)
                         print("replacing ...")
                         print(pred)
-                        pred = pred.replace('<ent> '+entlabel+' </ent>','<'+ent+'>')
+                        pred = pred.replace('<ent> '+entlabel+' </ent>',ent)
                         print(pred)
                 response = sparqlquery(pred)
                 print("response: ",response)
-                beamoutputs.append({'query':pred,'answer':response})
+                beamoutputs.append({'query':pred,'answer':response, 'error':None, 'entities': list(set(linked_entities))})
         return beamoutputs
 
 

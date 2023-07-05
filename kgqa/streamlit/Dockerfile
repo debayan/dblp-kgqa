@@ -12,12 +12,12 @@ RUN apt-get install -y \
     software-properties-common \ 
     && rm -rf /var/lib/apt/lists/*
 
-#RUN pip install --upgrade pip
+RUN pip install --upgrade pip
 
-RUN pip3 install streamlit
+RUN pip3 install streamlit==1.23.1
 
 COPY . .
 
 EXPOSE 8501
 
-ENTRYPOINT ["streamlit", "run", "home.py", "localhost"]
+ENTRYPOINT ["streamlit", "run", "Home.py", "localhost"]
