@@ -38,10 +38,12 @@ model.eval()
 sentmodel = SentenceTransformer('bert-base-nli-mean-tokens')
 
 
-def label_search_es(label):
+def label_search_es(label, enttype):
     try:
-        resp = es.search(index="dblplabelsindex01", query={"match":{"label":{"query":label}}})
-        #print(resp)
+        enttypes = ["https://dblp.org/rdf/schema#"+x for x in enttype]
+        resp = es.search(index="dblplabelsindex02", query={"bool": {"must": [{"match": {"label": label}}],
+                                "filter": {"terms": {"types": enttypes}}}})
+
         entities = []
         for source in resp['hits']['hits']:
             entities.append([source['_source']['entity'], source['_source']['label']])
@@ -62,7 +64,7 @@ def fetchembedding(entid):
 
 
 def link(question, label, entity_type):
-    candidate_entities_labels = label_search_es(label)
+    candidate_entities_labels = label_search_es(label, entity_type)
     candidate_embeddings = [fetchembedding(x[0]) for x in candidate_entities_labels]
     question_encoding = list(sentmodel.encode([question])[0])+ 200*[0.0]
     question_embedding = model(torch.tensor(question_encoding))
