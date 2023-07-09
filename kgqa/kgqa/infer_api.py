@@ -143,7 +143,7 @@ def sparqlquery(query):
 
 def resolveentity_es(label, enttype):
     try:
-        resp = es.search(index="dblplabelsindex01", query={"match":{"label":{"query":label}}})
+        resp = es.search(index="dblplabelsindex02", query={"match":{"label":{"query":label}}})
         print(resp)
         entities = []
         for source in resp['hits']['hits']:
