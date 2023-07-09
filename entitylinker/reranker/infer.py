@@ -6,6 +6,7 @@ import torch.nn as nn
 from sentence_transformers import SentenceTransformer
 from flask import Flask, request, jsonify
 from elasticsearch import Elasticsearch
+from fuzzywuzzy import fuzz
 
 class SiameseNetwork(nn.Module):
     def __init__(self):
@@ -13,7 +14,7 @@ class SiameseNetwork(nn.Module):
 
         # Define your network architecture
         self.embedding = nn.Sequential(
-            nn.Linear(968, 512),
+            nn.Linear(969, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
@@ -46,7 +47,7 @@ def label_search_es(label, enttype):
 
         entities = []
         for source in resp['hits']['hits']:
-            entities.append([source['_source']['entity'], source['_source']['label']])
+            entities.append([source['_source']['entity'], eval(source['_source']['label'])])
         return entities
     except Exception as err:
         print(err)
@@ -66,10 +67,10 @@ def fetchembedding(entid):
 def link(question, label, entity_type):
     candidate_entities_labels = label_search_es(label, entity_type)
     candidate_embeddings = [fetchembedding(x[0]) for x in candidate_entities_labels]
-    question_encoding = list(sentmodel.encode([question])[0])+ 200*[0.0]
+    question_encoding = list(sentmodel.encode([question])[0])+ 201*[0.0]
     question_embedding = model(torch.tensor(question_encoding))
 
-    candidate_encodings = [list(sentmodel.encode([x[1]])[0])+candidate_embeddings[idx]  for idx,x in enumerate(candidate_entities_labels)]
+    candidate_encodings = [list(sentmodel.encode([x[1]])[0])+candidate_embeddings[idx]+[fuzz.token_set_ratio(x[1],question)/100.0]  for idx,x in enumerate(candidate_entities_labels)]
     candidate_embeddings = [model(torch.tensor(x)) for x in candidate_encodings]
     arr = []
     for idx,candidate_embedding in enumerate(candidate_embeddings):

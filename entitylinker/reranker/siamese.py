@@ -16,7 +16,7 @@ class YourCustomDataset(Dataset):
             line = line.strip()
             d = json.loads(line)
             for entsamp in d['entity_samples']:
-                self.data.append({'question':d['question']['string'], 'positive': entsamp['goldemb'], 'negative': entsamp['negemb'], 'poslabel':entsamp['goldlabel'], 'neglabel':entsamp['neglabel']})
+                self.data.append({'question':d['question']['string'], 'positive': entsamp['goldemb'], 'negative': entsamp['negemb'], 'poslabel':entsamp['goldlabel'], 'goldfuzz':entsamp['goldfuzz']/100.0, 'neglabel':entsamp['neglabel'], 'negfuzz':entsamp['negfuzz']/100.0})
 
     def __len__(self):
         # Return the total number of samples in your dataset
@@ -26,9 +26,10 @@ class YourCustomDataset(Dataset):
         # Retrieve a single sample from your dataset at the given index
 
         # Fetch the anchor, positive, and negative samples from your data
-        anchor = list(self.sentmodel.encode([self.data[index]['question']])[0])+ 200*[0.0]
-        positive = list(self.sentmodel.encode([self.data[index]['poslabel']])[0])+[float(x) for x in self.data[index]['positive']]
-        negative = list(self.sentmodel.encode([self.data[index]['neglabel']])[0])+[float(x) for x in self.data[index]['negative']]
+        anchor = list(self.sentmodel.encode([self.data[index]['question']])[0])+ 201*[0.0]
+        positive = list(self.sentmodel.encode([self.data[index]['poslabel']])[0])+[float(x) for x in self.data[index]['positive']]+[self.data[index]['goldfuzz']]
+        negative = list(self.sentmodel.encode([self.data[index]['neglabel']])[0])+[float(x) for x in self.data[index]['negative']]+[self.data[index]['negfuzz']]
+
         # Convert the samples to tensors if needed
         anchor = torch.tensor(anchor)
         positive = torch.tensor(positive)
@@ -42,7 +43,7 @@ class SiameseNetwork(nn.Module):
 
         # Define your network architecture
         self.embedding = nn.Sequential(
-            nn.Linear(968, 512),
+            nn.Linear(969, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
