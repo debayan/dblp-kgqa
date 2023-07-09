@@ -14,7 +14,7 @@ def label_search_es(label, enttype):
 
         entities = []
         for source in resp['hits']['hits']:
-            entities.append([source['_source']['entity'], source['_source']['label']])
+            entities.append([source['_source']['entity'], source['_source']['label'].replace('"','')])
         return entities
     except Exception as err:
         print(err)
@@ -55,10 +55,10 @@ def getlabels(entid):
         #print(resp)
         labels = []
         for source in resp['hits']['hits']:
-            labels.append(source['_source']['label'])
+            labels.append(source['_source']['label'].replace('"',''))
         return labels
     except Exception as err:
-        print(err)
+        print("here",err)
         return []
 
 def remove_all_occurrences(lst, item):
@@ -71,28 +71,28 @@ f = open(sys.argv[2],'w')
 for item in d['questions']:
     try:
         entities = item['entities']
-        print(item['id'])
-        print(item['question']['string'])
-        print(entities)
+        #print(item['id'])
+        #print(item['question']['string'])
+        #print(entities)
         newents = []
         for ent in entities:
             res = getlabels(ent)
             enttypes = gettype(ent)
-            entlabel = eval(res[0])
+            entlabel = res[0]
             print("res:",entlabel)
             cands = label_search_es(entlabel, enttypes)
             goldfuzz = fuzz.token_set_ratio(entlabel, item["question"])
             remove_all_occurrences(cands,[ent,entlabel])
             negative_sample = random.choice(cands)
-            print("gold ent:",ent)
-            print("neg  ent:",negative_sample[0])
+            #print("gold ent:",ent)
+            #print("neg  ent:",negative_sample[0])
             goldemb = fetchembedding(ent)
             negemb = fetchembedding(negative_sample[0])
             neglabel  = negative_sample[1]
             negfuzz = fuzz.token_set_ratio(neglabel, item["question"])
-            newents.append({'goldent':ent, 'goldemb':goldemb, 'goldlabel':entlabel, "goldfuzz": goldfuzz, 'negent':negative_sample, 'negemb':negemb , 'neglabel':neglabel, "negfuzz":negfuzz})
+            newents.append({'goldent':ent, 'goldemb':goldemb, 'goldlabel':entlabel, "goldfuzz": goldfuzz, 'negent':negative_sample[0], 'negemb':negemb , 'neglabel':neglabel, "negfuzz":negfuzz})
         newitem = {'id':item['id'], 'question':item['question'], 'entity_samples': newents}
-        print(newitem)
+        #print(newitem)
         f.write(json.dumps(newitem)+'\n')
     except Exception as err:
         print(err)

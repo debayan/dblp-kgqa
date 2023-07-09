@@ -47,7 +47,7 @@ def label_search_es(label, enttype):
 
         entities = []
         for source in resp['hits']['hits']:
-            entities.append([source['_source']['entity'], eval(source['_source']['label'])])
+            entities.append([source['_source']['entity'], source['_source']['label'].replace('"','')])
         return entities
     except Exception as err:
         print(err)
