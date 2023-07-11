@@ -13,8 +13,6 @@ import time
 import logging
 import random
 import re
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
 from string import punctuation
 import wandb
 
@@ -135,21 +133,26 @@ def create_dataloader(args):
 # Set up Wandb
 def setup_wandb(args):
     config = dict(
+            model_name=args.model_name,
             epochs=args.epochs,
             batch_size=args.batch_size,
-            lr=args.lr,
-            team_name="dblp-kgqa",
-            project_name="dblp-kgqa-"+args.model_name,
+            lr=args.lr
+            )
+    wandb.init(
+            config=config,
+            name=args.model_name+"_bs="+str(args.batch_size)+"_e="+str(args.epochs)+"_lr="+str(args.lr),
+            project="dblp-kgqa-runs",
+            entity="dblp-kgqa",
             reinit=True
             )
-    wandb.init(config=config)
 
 # Define training procedure
 def train(epoch, model, optimizer, train_dataloader, device):
     model.train()
     train_loss = 0
     
-    for batch in train_dataloader:
+    for idx, batch in enumerate(train_dataloader):
+        print("batch = " + str(idx))
         inputs = tokenizer.batch_encode_plus(batch[0], padding=True, truncation=True, return_tensors='pt')
         inputs = {key: val.to(device) for key, val in inputs.items()}
 
@@ -180,7 +183,8 @@ def valid(epoch, model, optimizer, valid_dataloader, device, batch_size):
     exact_matches_predicted = 0
     total_predicted = 0
 
-    for batch in valid_dataloader:
+    for idx, batch in enumerate(valid_dataloader):
+        print("batch = " + str(idx))
         inputs = tokenizer.batch_encode_plus(batch[0], padding=True, truncation=True, return_tensors='pt')
         inputs = {key: val.to(device) for key, val in inputs.items()}
 
@@ -197,7 +201,7 @@ def valid(epoch, model, optimizer, valid_dataloader, device, batch_size):
 
         outs = model.generate(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], max_length=512)
         predicted = [tokenizer.decode(ids, skip_special_tokens=True, clean_up_tokenization_spaces=True) for ids in outs]
-        questions = [tokenizer.decode(ids) for ids in inputs['input_ids']]
+        questions = [tokenizer.decode(ids, skip_special_tokens=True, clean_up_tokenization_spaces=True) for ids in inputs['input_ids']]
         targets = [tokenizer.decode(ids, skip_special_tokens=True, clean_up_tokenization_spaces=True) for ids in labels['input_ids']]
 
         exact_matches_predicted += exact_matches(targets, predicted)
@@ -214,7 +218,9 @@ def valid(epoch, model, optimizer, valid_dataloader, device, batch_size):
     validation_logger.add_row(str(epoch), str(loss))
     print(f'Validation Loss: {loss:.3f}')
     print("\nExact Matches = {}/{}\n".format(exact_matches_predicted, total_predicted))
+    print("\nValidation Accuracy = {}\n".format(exact_matches_predicted/total_predicted))
     wandb.log({"epoch":epoch, "val_loss":loss})
+    wandb.log({"epoch":epoch, "val_accuracy": exact_matches_predicted/total_predicted})
     return loss
 
 # Define test
@@ -265,7 +271,7 @@ if __name__ == '__main__':
         print(device)
         # Set up wandb
         setup_wandb(args)
-        wandb.watch(model, log="all", log_freq=10)
+        wandb.watch(model, log_freq=10)
 
         for epoch in range(epochs):
             print("\nEpoch: {}/{}".format(epoch+1, epochs))
@@ -284,5 +290,8 @@ if __name__ == '__main__':
         console.print(training_logger)
         console.print(validation_logger)
         now = datetime.now()
-        console.save_text(os.path.join(args.output_dir, "logs_{}.txt".format(now.strftime("%d/%m/%Y_%H:%M:%S"))))    
+        log_name = "logs_{}.txt".format(now.strftime("%d/%m/%Y_%H:%M:%S"))
+        file_path = os.path.join(args.output_dir, log_name) 
+        f = open(file_path, "w")
+        console.save_text(file_path)    
         wandb.finish() 
