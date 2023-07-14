@@ -21,4 +21,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
-ENTRYPOINT ["python", "infer.py", "model_transe_1/model_epoch_4.pth"]
+ENTRYPOINT ["python", "infer.py"]
