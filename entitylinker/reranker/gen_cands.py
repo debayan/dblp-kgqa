@@ -41,7 +41,7 @@ def gettype(entid):
 
 def fetchembedding(entid):
     try:
-        resp = es.search(index="dblpembedstranseindex01", query={"match":{"key":entid}})
+        resp = es.search(index="dblpembedsdistmultindex01", query={"match":{"key":entid}})
         #print(resp)
         embedding = resp['hits']['hits'][0]['_source']['embedding']
         return embedding
