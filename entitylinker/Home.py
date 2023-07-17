@@ -17,7 +17,7 @@ from transformers import (
 
 # Import utility functions
 import sys
-sys.path.insert(0, '../utils/')
+sys.path.insert(0, './utils/')
 from utils import *
 
 st.set_page_config(layout="wide")
