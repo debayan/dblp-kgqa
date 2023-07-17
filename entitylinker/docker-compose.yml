@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+        banerjee_arefa_dblplink_api:
+                build:
+                        context: ./reranker
+                        dockerfile: Dockerfile 
+                ports:
+                        - "5002:5002"
+                network_mode: "host"
+
+        banerjee_arefa_dblplink_streamlit:
+                build:
+                        context: ./
+                        dockerfile: Dockerfile
+                environment:
+                        - STREAMLIT_SERVER_ENABLECORS=false
+                        - STREAMLIT_SERVER_ENABLE_CORS=false
+                        - STREAMLIT_SERVER_BASEURLPATH=/dblplink
+                        - STREAMLIT_SERVER_BASE_URL_PATH=/dblplink
+                ports:
+                        - "8501:8502"
+                network_mode: "host"
+

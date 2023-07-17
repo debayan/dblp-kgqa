@@ -2,23 +2,23 @@
 
 FROM python:3.9-slim
 
-USER root
-
-RUN sed -i -e 's/^APT/# APT/' -e 's/^DPkg/# DPkg/' \
-      /etc/apt/apt.conf.d/docker-clean
-
 WORKDIR /app
-
 COPY . .
 
-RUN apt-get update && apt-get install -y \
+
+RUN apt-get update 
+
+RUN apt-get install -y \
     build-essential \
     software-properties-common \ 
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip
+
+RUN pip3 install streamlit==1.23.1
 RUN pip install -r requirements.txt
 
-EXPOSE 5002
 
-ENTRYPOINT ["python", "infer.py"]
+EXPOSE 8501
+
+ENTRYPOINT ["streamlit", "run", "Home.py"]
