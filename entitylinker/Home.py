@@ -46,8 +46,8 @@ def setup_model(model_name, batch_size, epoch):
         model = BartForConditionalGeneration.from_pretrained("facebook/"+model_name, return_dict = True)
         tokenizer = BartTokenizer.from_pretrained("facebook/"+model_name)
 
-    output_dir = './output/'+model_name+"_bs="+str(batch_size)+'/'
-    load_model(output_dir, model, 'model_{}_epoch_{}.pth'.format(model_name, epoch-1))
+    output_dir = './models/'
+    load_model(output_dir, model, 'model_{}.pth'.format(model_name))
     return model, tokenizer
 
 def infer(question, model, tokenizer, device):
@@ -103,7 +103,7 @@ def add_result(question, embedding, labels, types):
     elif embedding == 'DistMult':
         embed = 'distmult'
 
-    url = "http://ltcpu2:5001/entitylinker/" + embed
+    url = "http://localhost:5002/entitylinker/" + embed
     headers = {"Content-Type": "application/json"}
     idx = 0
     responses = []
@@ -181,7 +181,7 @@ def main():
     else:
         disable_ques = True
     
-    model_options = ('t5-small', 't5-base', 'bart-base', 'bart-large')
+    model_options = ('t5-small', 't5-base')
     embed_options = ['TransE', 'Complex', 'DistMult']
     if st.session_state.num_combos == len(model_options)*len(embed_options):
         disable_selection = True
@@ -214,6 +214,7 @@ def main():
         model.to(device)
     
     # Buttons
+    del_btn = None
     if st.session_state.question != '':
         col1_clr, col2_newq = st.columns([0.1, 0.9])
         with col1_clr:

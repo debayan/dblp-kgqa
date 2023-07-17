@@ -16,7 +16,7 @@ def save_model(output_dir, model, model_name, epoch, score):
 def load_model(output_dir, model, model_name):
     model_file = os.path.join(output_dir, model_name)
     assert os.path.isfile(model_file), 'Error: no model found!'
-    model_state = torch.load(model_file)
+    model_state = torch.load(model_file, map_location=torch.device('cpu'))
     model.load_state_dict(model_state)
 
 def exact_matches(targets, predictions):
