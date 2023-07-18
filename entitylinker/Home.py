@@ -8,6 +8,7 @@ import requests
 import pandas as pd
 import numpy as np
 import time
+import configparser
 from transformers import (
         T5ForConditionalGeneration,
         T5Tokenizer,
@@ -19,6 +20,8 @@ import sys
 sys.path.insert(0, './utils/')
 from utils import *
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 st.set_page_config(layout="wide")
 
 if "num_combos" not in st.session_state:
@@ -104,8 +107,8 @@ def make_clickable(link, strip=True):
     return f'<a target="_blank" href="{link}">{text}</a>'
 
 @st.cache_data
-def add_result(question, embedding, labels, types):
-    url = "http://ltcpu2:5001/entitylinker/" + embedding
+def add_result(question, embedding, labels, types, _config, _environment):
+    url = _config[_environment]['entitylinker'] + embedding
     headers = {"Content-Type": "application/json"}
     idx = 0
     responses = []
@@ -195,7 +198,7 @@ def use_selected_ques():
     st.session_state.entered_ques = ""
     st.session_state.submit_ques = True
 
-def main():
+def main(config, environment='staging'):
     st.header('DBLP Entity Linker')
 
     # Custom style
@@ -353,7 +356,7 @@ def main():
                         with st.spinner('Predicting...'):
                             labels, types = predict_labels_types(question, model, tokenizer, device)
                         with st.spinner('Ranking...'):
-                            result = add_result(question, embed_name_display[embedding], labels, types)
+                            result = add_result(question, embed_name_display[embedding], labels, types, config, environment)
                             update_results(result)
                         with st.expander(combo_name, expanded=True):
                             display_table(st.session_state.results[st.session_state.num_combos-1])
@@ -364,7 +367,7 @@ def main():
                         with st.spinner('Predicting...'):
                             labels, types = predict_labels_types(question, model, tokenizer, device)
                         with st.spinner('Ranking...'):
-                            result = add_result(question, embed_name_display[embedding], labels, types)
+                            result = add_result(question, embed_name_display[embedding], labels, types, config, environment)
                             update_results(result)
                         with st.expander(combo_name, expanded=True):
                             display_table(st.session_state.results[st.session_state.num_combos-1])
@@ -380,4 +383,7 @@ def main():
     print(st.session_state)
 
 if __name__ == '__main__':
-    main()
+    if sys.argv[1] == 'production':
+        main(config, 'production')
+    else:
+        main(config, 'staging')
