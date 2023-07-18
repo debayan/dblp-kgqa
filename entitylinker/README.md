@@ -13,5 +13,9 @@ python -u evaluate.py --model_name t5-base --embedding_name transe
 ### Running Streamlit
 
 ```
-streamlit run Home.py
+streamlit run Home.py staging
+
+OR
+
+streamlit run Home.py production
 ```
