@@ -19,3 +19,12 @@ OR
 
 streamlit run Home.py production
 ```
+
+
+###Docker
+
+```
+docker compose build
+docker compose up
+docker compose down
+```
