@@ -33,7 +33,7 @@ class SiameseNetwork(nn.Module):
 
 sentmodel = SentenceTransformer('bert-base-nli-mean-tokens')
 model = {}
-es = Elasticsearch("http://ltcpu2:2200/")
+es = Elasticsearch("http://134.100.15.235:2200/")#ltcpu2
 
 model['transe'] = SiameseNetwork()
 model_transe_path = "model_transe_1/model_epoch_4.pth"
