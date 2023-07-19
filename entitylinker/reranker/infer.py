@@ -51,8 +51,9 @@ model['complex'].load_state_dict(torch.load(model_complex_path))
 model['complex'].eval()
 
 def remove_duplicates(array_of_arrays):
-    unique_arrays = set((inner_array[0],inner_array[1][0],inner_array[1][1]) for inner_array in array_of_arrays)
-    return [list(unique_array) for unique_array in unique_arrays]
+    unique_arrays = list(set((inner_array[0],inner_array[1][0],inner_array[1][1]) for inner_array in array_of_arrays))
+    unique_arrays_final = [[inner_array[0],[inner_array[1],inner_array[2]]] for inner_array in unique_arrays]
+    return unique_arrays_final
 
 
 def label_search_es(label, enttype):
