@@ -259,7 +259,7 @@ def main(config, environment='staging'):
             st.markdown('<div class="Aligner"', unsafe_allow_html=True)
             newq_btn = st.button('New question', type='primary',on_click=newq_callback)
             st.markdown('</div>', unsafe_allow_html=True)
-    sample_ques = st.selectbox('Choose from samples', ["Use entered question","Between 'Graphics and Security: Exploring Visual Biometrics' and 'OOElala: order-of-evaluation based alias analysis for compiler optimization', which one was published first?","Which one has more number of authors, 'A Flexible and Generic Gaussian Sampler With Power Side-Channel Countermeasures for Quantum-Secure Internet of Things' or 'GEONGrid portal: design and implementations'?"], disabled=disable_ques, index=0, key="selection_1", on_change=use_selected_ques)
+    sample_ques = st.selectbox('Choose from samples', ["Use entered question","Who were the co-authors of Ashish Vaswani in the paper ‘Attention is all you need’?", "When was the paper ‘An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale’ published?", "Which papers were written by Yann LeCun and Yoshua Bengio?","When was Adam introduced for stochastic optimization?"], disabled=disable_ques, index=0, key="selection_1", on_change=use_selected_ques)
     
     input_form = st.sidebar.form('Form1')
     model_name = ''
