@@ -4,11 +4,6 @@ import torch
 from tqdm import tqdm
 import transformers
 
-# Import utility functions
-import sys
-sys.path.insert(0, './../utils/')
-from utils import *
-
 def save_model(output_dir, model, model_name, epoch, score):
     model_file = os.path.join(output_dir, 'model_{}_epoch{}_score{:.4f}.pth'.format(model_name, epoch, score))
     torch.save(model.state_dict(), model_file)

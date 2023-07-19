@@ -219,11 +219,10 @@ def main(config, environment='staging'):
     }
     td {
     text-align: left;
-    font-size: smaller;
     word-break:break-word;
     }
     th {
-    font-size: smaller;
+    
     }
     div[class="st-c7 st-cl st-cm st-ae st-af st-ag st-ah st-ai st-aj st-cn st-co"]{
     font-size:smaller;
@@ -286,8 +285,8 @@ def main(config, environment='staging'):
     # Display question and buttons
     del_btn = False
     if st.session_state.question != '':
-        st.markdown('<p style="font-size:smaller;font-weight:bold;margin-bottom:-1rem;padding-top:1rem;padding-left:2rem;padding-right:2rem;">Question: </p>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size:smaller;padding-top:-1rem;padding-bottom:1rem;padding-left:2rem;padding-right:2rem;">'+st.session_state.question+' </p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-weight:bold;margin-bottom:-1rem;padding-top:1rem;padding-left:2rem;padding-right:2rem;">Question: </p>', unsafe_allow_html=True)
+        st.markdown('<p style="padding-top:-1rem;padding-bottom:1rem;padding-left:2rem;padding-right:2rem;">'+st.session_state.question+' </p>', unsafe_allow_html=True)
 
         delete_form = st.sidebar.form('Form2')
         with delete_form:
