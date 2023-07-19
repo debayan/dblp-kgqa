@@ -106,11 +106,10 @@ def make_clickable(link, strip=True):
         link = link[1:-1]
     return f'<a target="_blank" href="{link}">{text}</a>'
 
-@st.cache_data
-def add_result(question, embedding, labels, types, _config, _environment):
+@st.cache_data(show_spinner = False)
+def add_result(question, model_name, embedding, labels, types, _config, _environment):
     url = _config[_environment]['entitylinker'] + embedding
     headers = {"Content-Type": "application/json"}
-    idx = 0
     responses = []
     for label, typs in zip(labels, types):
         data = {"question": question, "label": label, "type": typs}
@@ -118,7 +117,7 @@ def add_result(question, embedding, labels, types, _config, _environment):
         print(resp)
         resp_json = resp.json()
         responses.append(resp_json)
-    result = {"labels":labels, "types":types, "responses":responses}
+    result = {"question": question, "model_name": model_name, "embed_name": embedding, "labels":labels, "types":types, "responses":responses}
     return result
 
 def update_results(result):
@@ -176,12 +175,6 @@ def clear_callback():
     st.session_state.combo_names = {} 
     refresh()
 
-def newq_callback():
-    clear_callback()
-    st.session_state.selection_1 = "Use entered question"
-    st.session_state.entered_ques = ''
-    st.session_state.question = ''
-
 def del_combo(del_model):
     idx = st.session_state.combo_names[del_model]
     st.session_state.results.pop(idx)
@@ -190,13 +183,11 @@ def del_combo(del_model):
     st.session_state.refresh = 1
 
 def use_entered_ques():
-    st.session_state.selection_1 = "Use entered question"
-    st.session_state.submit_ques = True
-    st.session_state.refresh = 1
+    st.session_state.selection_1 = ""
 
 def use_selected_ques():
-    st.session_state.entered_ques = ""
-    st.session_state.submit_ques = True
+    st.session_state.entered_ques = st.session_state.selection_1
+    st.session_state.selection_1 = ""
 
 def main(config, environment='staging'):
     st.header('DBLP Entity Linker')
@@ -232,74 +223,121 @@ def main(config, environment='staging'):
     align-items: center;
     justify-content: center;
     }
+    .flex-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;         
+    }
+    div[data-testid="stVerticalBlockNew"]{
+    border-style: solid;
+    border-width: 1px;
+    border-color: #ff4b4b;
+    border-radius: 5px;
+    }
     </style>
     """, unsafe_allow_html=True)
-
-    if st.session_state.question == '':
-        disable_ques = False
-    else:
-        disable_ques = True
     
     # Mapping names
     model_name_display = {"T5-small":"t5-small", "T5-base":"t5-base"}
     embed_name_display = {"TransE":"transe", "ComplEx":"complex", "DistMult":"distmult"}
 
-    # If all combos already there, disable selections
-    if st.session_state.num_combos == len(model_name_display)*len(embed_name_display):
-        disable_selection = True
-    else:
-        disable_selection = False
-    
-    # Question
-    col0_ques, col2_newq = st.columns([0.8, 0.2])
-    with col0_ques:
-        entered_ques = st.text_input('Enter question', disabled=disable_ques, on_change=use_entered_ques, key="entered_ques")
-    with col2_newq:
-        if st.session_state.question != '':
-            st.markdown('<div class="Aligner"', unsafe_allow_html=True)
-            newq_btn = st.button('New question', type='primary',on_click=newq_callback)
-            st.markdown('</div>', unsafe_allow_html=True)
-    sample_ques = st.selectbox('Choose from samples', ["Use entered question","Who were the co-authors of Ashish Vaswani in the paper ‘Attention is all you need’?", "When was the paper ‘An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale’ published?", "Which papers were written by Yann LeCun and Yoshua Bengio?","When was Adam introduced for stochastic optimization?"], disabled=disable_ques, index=0, key="selection_1", on_change=use_selected_ques)
-    
-    input_form = st.sidebar.form('Form1')
     model_name = ''
     embedding = ''
-    with input_form: 
-        # Input
+    # Input
+    with st.sidebar:
         st.markdown('###### 1. Label Predictor Model')
-        model_name = st.radio('Select Model', options=model_name_display.keys(), label_visibility = 'collapsed', horizontal=False, disabled=disable_selection)  
+        model_name = st.radio('Select Model', options=model_name_display.keys(), label_visibility = 'collapsed', horizontal=False)  
         st.markdown('###### 2. Entity Ranker Embeddings')
-        embedding = st.radio('Select Embeddings',embed_name_display.keys(), label_visibility='collapsed', horizontal=False, disabled=disable_selection)  
-        submit_btn = st.form_submit_button('Submit', type="primary", disabled=disable_selection)
-
-        # Load Model
-        epochs = 50
-        if model_name == 'T5-small':
-            batch_size = 16
-        else:
-            batch_size = 4
-        model, tokenizer = setup_model(model_name_display[model_name], batch_size, epochs)
-        device = 'cpu'
-        model.to(device)
+        embedding = st.radio('Select Embeddings',embed_name_display.keys(), label_visibility='collapsed', horizontal=False)  
+        
+    # Load Model
+    epochs = 50
+    if model_name == 'T5-small':
+        batch_size = 16
+    else:
+        batch_size = 4
+    model, tokenizer = setup_model(model_name_display[model_name], batch_size, epochs)
+    device = 'cpu'
+    model.to(device)
     
-    # Display question and buttons
-    del_btn = False
-    if st.session_state.question != '':
-        st.markdown('<p style="font-weight:bold;margin-bottom:-1rem;padding-top:1rem;padding-left:2rem;padding-right:2rem;">Question: </p>', unsafe_allow_html=True)
-        st.markdown('<p style="padding-top:-1rem;padding-bottom:1rem;padding-left:2rem;padding-right:2rem;">'+st.session_state.question+' </p>', unsafe_allow_html=True)
+    # Question
+    sample_ques = st.selectbox('Select from samples', ["","Who were the co-authors of Ashish Vaswani in the paper ‘Attention is all you need’?", "When was the paper ‘An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale’ published?", "Which papers were written by Yann LeCun and Yoshua Bengio?","When was Adam introduced for stochastic optimization?"], index=0, key="selection_1", on_change=use_selected_ques)
+    col1_ques, col2_btn = st.columns([0.9, 0.1])
+    with col1_ques:
+        entered_ques = st.text_input('Enter question', on_change=use_entered_ques, key="entered_ques")
+    with col2_btn:
+        st.markdown("<div style='padding-top:1.6em;margin-bottom:0px; padding-bottom:0px;'>", unsafe_allow_html=True)
+        submit_btn = st.button('Submit', help="Press Submit to see result.",  type="primary")
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    col1_out, col2_out = st.columns([0.5, 0.5])
+    
+    # Add the result if submit pressed
+    if submit_btn:
+        if len(entered_ques):
+            question = entered_ques
+            st.session_state.question = question
 
+            if model_name == '' and embedding == '':
+                model_name = 'T5-small'
+                embedding = 'TransE'
+
+            combo_name = question + " + " + model_name + " + " + embedding
+            if combo_name in st.session_state.combo_names:
+                st.error("This combination already exists. Please try another.")
+            else:
+                st.session_state.combo_names[combo_name] = st.session_state.num_combos
+                with col1_out:
+                    with st.spinner('Predicting...'):
+                        labels, types = predict_labels_types(question, model, tokenizer, device)
+                    with st.spinner('Ranking...'):
+                        result = add_result(question, model_name_display[model_name], embed_name_display[embedding], labels, types, config, environment)
+                        update_results(result)
+        else:
+            st.error('Please enter or select a question')
+        
+    # Print the results in two columns
+    for i in range(st.session_state.num_combos):
+        result = list(st.session_state.results)[st.session_state.num_combos - 1 - i]
+        combo_heading = result["model_name"] + " + " + result["embed_name"]
+        if i % 2 == 0:
+            with col1_out:
+                #st.markdown('<div class"stVerticalBlockNew">', unsafe_allow_html=True)
+                with st.expander("Question", expanded=True):
+                    st.markdown(result["question"])
+                with st.expander(combo_heading, expanded=True):
+                    display_table(st.session_state.results[st.session_state.num_combos - 1 - i])
+                with st.expander('Ranked Entities', expanded=False):
+                    display_res(st.session_state.results[st.session_state.num_combos - 1 - i])
+                st.divider()
+                #st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            with col2_out:
+                #st.markdown('<div class="stVerticalBlockNew">', unsafe_allow_html=True)
+                with st.expander("Question", expanded=True):
+                    st.markdown(result["question"])
+                with st.expander(combo_heading, expanded=True):
+                    display_table(st.session_state.results[st.session_state.num_combos - 1 - i])
+                with st.expander('Ranked Entities', expanded=False):
+                    display_res(st.session_state.results[st.session_state.num_combos - 1 - i])
+                st.divider()
+                #st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Display buttons
+    del_btn = False
+    if st.session_state.num_combos != 0:
         delete_form = st.sidebar.form('Form2')
         with delete_form:
             del_list = ['Select combination']
-            del_list.extend(list(st.session_state.combo_names.keys()))
+            del_list.extend(reversed(list(st.session_state.combo_names.keys())))
             del_list.append('All')
             del_model = st.selectbox('', options=del_list, label_visibility='collapsed', index=0)
             if st.session_state.num_combos == 0:
                 disable_delete = True
             else:
                 disable_delete = False
-            del_btn = st.form_submit_button('Delete', type='primary', disabled=disable_delete)
-    
+            del_btn = st.form_submit_button('Remove', help="Remove a result from the ones displayed.", type='primary', disabled=disable_delete)
+
     # Delete combination
     if del_btn:
         if del_model == 'Select combination':
@@ -309,71 +347,6 @@ def main(config, environment='staging'):
             clear_callback()
         else:
             del_combo(del_model)
-
-    # Print the old results in two columns
-    col1_out, col2_out = st.columns([0.5, 0.5])
-    for i in range(st.session_state.num_combos):
-        combo_name = list(st.session_state.combo_names)[i]
-        if i % 2 == 0:
-            with col1_out:
-                with st.expander(combo_name, expanded=True):
-                    display_table(st.session_state.results[i])
-                with st.expander('Ranked Entities', expanded=False):
-                    display_res(st.session_state.results[i])
-        else:
-            with col2_out:
-                with st.expander(combo_name, expanded=True):
-                    display_table(st.session_state.results[i])
-                with st.expander('Ranked Entities', expanded=False):
-                    display_res(st.session_state.results[i])
-    # Add new combo if submitted
-    if submit_btn or st.session_state.submit_ques:
-        st.session_state.refresh = 1
-        st.session_state.submit_ques = False
-        if st.session_state.question != '' or len(entered_ques) and sample_ques == "Use entered question" or sample_ques != "Use entered question":
-            disable_ques = True
-
-            if st.session_state.question != '':
-                question = st.session_state.question
-            elif sample_ques == "Use entered question":
-                question = entered_ques
-            else:
-                question = sample_ques
-            st.session_state.question = question
-
-            if model_name == '' and embedding == '':
-                model_name = 'T5-small'
-                embedding = 'TransE'
-
-            combo_name = model_name + " + " + embedding
-            if combo_name in st.session_state.combo_names:
-                st.error("This combination already exists. Please try another.")
-            else:
-                st.session_state.combo_names[combo_name] = st.session_state.num_combos
-                if st.session_state.num_combos % 2 == 0:
-                    with col1_out:
-                        with st.spinner('Predicting...'):
-                            labels, types = predict_labels_types(question, model, tokenizer, device)
-                        with st.spinner('Ranking...'):
-                            result = add_result(question, embed_name_display[embedding], labels, types, config, environment)
-                            update_results(result)
-                        with st.expander(combo_name, expanded=True):
-                            display_table(st.session_state.results[st.session_state.num_combos-1])
-                        with st.expander('Ranked Entities', expanded=False):
-                            display_res(st.session_state.results[st.session_state.num_combos-1])
-                else:
-                    with col2_out:
-                        with st.spinner('Predicting...'):
-                            labels, types = predict_labels_types(question, model, tokenizer, device)
-                        with st.spinner('Ranking...'):
-                            result = add_result(question, embed_name_display[embedding], labels, types, config, environment)
-                            update_results(result)
-                        with st.expander(combo_name, expanded=True):
-                            display_table(st.session_state.results[st.session_state.num_combos-1])
-                        with st.expander('Ranked Entities', expanded=False):
-                            display_res(st.session_state.results[st.session_state.num_combos-1])
-        else:
-            st.error('Please enter or choose a question')
     
     if st.session_state.refresh==1:
         st.session_state.refresh = 0
