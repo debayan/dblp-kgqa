@@ -37,26 +37,23 @@ if "refresh" not in st.session_state:
 if "combo_names" not in st.session_state:
     st.session_state.combo_names = {}
 if "entered_ques" not in st.session_state:
-    st.session_state.entered_ques = "Which papers did Yann LeCun write?"
+    st.session_state.entered_ques = ""
 if "submit_ques" not in st.session_state:
     st.session_state.submit_ques = False
 
 # Load the pre-trained T5 model and tokenizer
-def setup_model(model_name, batch_size, epoch):
-    if re.match(r"t5*", model_name):
-        print("\nModel type: T5\n")
+def setup_models(model_names):
+    models = {}
+    tokenizers = {}
+    for model_name in model_names:
         model = T5ForConditionalGeneration.from_pretrained(model_name, return_dict = True)
         tokenizer = T5Tokenizer.from_pretrained(model_name)
-    else:
-        print("\nModel type: BART\n")
-        model = BartForConditionalGeneration.from_pretrained("facebook/"+model_name, return_dict = True)
-        tokenizer = BartTokenizer.from_pretrained("facebook/"+model_name)
+        models[model_name] = model
+        tokenizers[model_name] = tokenizer
+        output_dir = './models/'
+        load_model(output_dir, models[model_name], 'model_{}.pth'.format(model_name))
+    return models, tokenizers
 
-    output_dir = './models/'
-    load_model(output_dir, model, 'model_{}.pth'.format(model_name))
-    return model, tokenizer
-
-@st.cache_data
 def infer(question, _model, _tokenizer, device):
     # Tokenize
     input_question = _tokenizer.encode_plus(question, padding=True, truncation=True, return_tensors='pt')
@@ -190,7 +187,8 @@ def use_selected_ques():
     st.session_state.selection_1 = ""
 
 def main(config, environment='staging'):
-    st.header('DBLP Entity Linker')
+    with st.sidebar:
+        st.header('DBLP Entity Linker')
 
     # Custom style
     st.markdown("""
@@ -239,43 +237,41 @@ def main(config, environment='staging'):
     
     # Mapping names
     model_name_display = {"T5-small":"t5-small", "T5-base":"t5-base"}
+    model_name_display_inverse = {v: k for k, v in model_name_display.items()}
     embed_name_display = {"TransE":"transe", "ComplEx":"complex", "DistMult":"distmult"}
 
+    models, tokenizers = setup_models(model_name_display.values())
+    device = 'cpu'
+    for k,v in models.items():
+        models[k].to(device)
+    
     model_name = ''
     embedding = ''
-    # Input
-    with st.sidebar:
-        st.markdown('###### 1. Label Predictor Model')
-        model_name = st.radio('Select Model', options=model_name_display.keys(), label_visibility = 'collapsed', horizontal=False)  
-        st.markdown('###### 2. Entity Ranker Embeddings')
-        embedding = st.radio('Select Embeddings',embed_name_display.keys(), label_visibility='collapsed', horizontal=False)  
-        
-    # Load Model
-    epochs = 50
-    if model_name == 'T5-small':
-        batch_size = 16
-    else:
-        batch_size = 4
-    model, tokenizer = setup_model(model_name_display[model_name], batch_size, epochs)
-    device = 'cpu'
-    model.to(device)
-    
-    # Question
-    sample_ques = st.selectbox('Select from samples', ["","Who were the co-authors of Ashish Vaswani in the paper ‘Attention is all you need’?", "When was the paper ‘An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale’ published?", "Which papers were written by Yann LeCun and Yoshua Bengio?","When was Adam introduced for stochastic optimization?"], index=0, key="selection_1", on_change=use_selected_ques)
-    col1_ques, col2_btn = st.columns([0.9, 0.1])
-    with col1_ques:
-        entered_ques = st.text_input('Enter question', on_change=use_entered_ques, key="entered_ques")
-    with col2_btn:
-        st.markdown("<div style='padding-top:1.6em;margin-bottom:0px; padding-bottom:0px;'>", unsafe_allow_html=True)
-        submit_btn = st.button('Submit', help="Press Submit to see result.",  type="primary")
-        st.markdown("</div>", unsafe_allow_html=True)
+    with st.form("main-form"):
+        # Question
+        sample_ques = st.selectbox('Select from samples', ["","Who were the co-authors of Ashish Vaswani in the paper ‘Attention is all you need’?", "When was the paper ‘An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale’ published?", "Which papers were written by Yann LeCun and Yoshua Bengio?","When was Adam introduced for stochastic optimization?"], index=0, key="selection_1")
+        entered_ques = st.text_input('Enter question',  key="entered_ques")
+        col1,col2 = st.columns([0.2,0.2])
+        with col1:
+            st.markdown('###### 1. Label Predictor Model')
+            model_name = st.radio('Select Model', options=model_name_display.keys(), label_visibility = 'collapsed', horizontal=False)
+        with col2:
+            st.markdown('###### 2. Entity Ranker Embeddings')
+            embedding = st.radio('Select Embeddings',options=embed_name_display.keys(), label_visibility='collapsed', horizontal=False)
+        st.write("Tip: For sample question to be answered, the 'Enter question' field must be empty.")
+        submit_btn = st.form_submit_button("Submit")
     
     col1_out, col2_out = st.columns([0.5, 0.5])
     
     # Add the result if submit pressed
     if submit_btn:
+        ques = ''
         if len(entered_ques):
-            question = entered_ques
+            ques = entered_ques
+        else:
+            ques = sample_ques
+        if len(ques):
+            question = ques
             st.session_state.question = question
 
             if model_name == '' and embedding == '':
@@ -289,7 +285,7 @@ def main(config, environment='staging'):
                 st.session_state.combo_names[combo_name] = st.session_state.num_combos
                 with col1_out:
                     with st.spinner('Predicting...'):
-                        labels, types = predict_labels_types(question, model, tokenizer, device)
+                        labels, types = predict_labels_types(question, models[model_name_display[model_name]], tokenizers[model_name_display[model_name]], device)
                     with st.spinner('Ranking...'):
                         result = add_result(question, model_name_display[model_name], embed_name_display[embedding], labels, types, config, environment)
                         update_results(result)
@@ -328,6 +324,7 @@ def main(config, environment='staging'):
     if st.session_state.num_combos != 0:
         delete_form = st.sidebar.form('Form2')
         with delete_form:
+            st.write("Clear workspace")
             del_list = ['Select combination']
             del_list.extend(reversed(list(st.session_state.combo_names.keys())))
             del_list.append('All')
@@ -348,11 +345,11 @@ def main(config, environment='staging'):
         else:
             del_combo(del_model)
     
-    if st.session_state.refresh==1:
-        st.session_state.refresh = 0
-        time.sleep(3)
-        st.experimental_rerun()     
-    print(st.session_state)
+#    if st.session_state.refresh==1:
+#        st.session_state.refresh = 0
+#        time.sleep(3)
+#        st.experimental_rerun()     
+#    print(st.session_state)
 
 if __name__ == '__main__':
     if sys.argv[1] == 'production':

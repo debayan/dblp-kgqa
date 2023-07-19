@@ -13,6 +13,7 @@ services:
                         context: ./
                         dockerfile: Dockerfile
                 environment:
+                        - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
                         - STREAMLIT_SERVER_ENABLECORS=false
                         - STREAMLIT_SERVER_ENABLE_CORS=false
                         - STREAMLIT_SERVER_BASEURLPATH=/dblplink
