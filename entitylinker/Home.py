@@ -42,6 +42,7 @@ if "submit_ques" not in st.session_state:
     st.session_state.submit_ques = False
 
 # Load the pre-trained T5 model and tokenizer
+@st.cache_resource
 def setup_models(model_names):
     models = {}
     tokenizers = {}
@@ -239,12 +240,10 @@ def main(config, environment='staging'):
     model_name_display = {"T5-small":"t5-small", "T5-base":"t5-base"}
     model_name_display_inverse = {v: k for k, v in model_name_display.items()}
     embed_name_display = {"TransE":"transe", "ComplEx":"complex", "DistMult":"distmult"}
-
-    models, tokenizers = setup_models(model_name_display.values())
+    models, tokenizers = setup_models(list(model_name_display.values()))
     device = 'cpu'
     for k,v in models.items():
         models[k].to(device)
-    
     model_name = ''
     embedding = ''
     with st.form("main-form"):
