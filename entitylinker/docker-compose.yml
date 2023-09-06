@@ -1,6 +1,21 @@
 version: '3'
 
 services:
+        banerjee_arefa_dblplink_elasticsearch:
+               image: elasticsearch:8.2.2
+               environment:
+                       - discovery.type=single-node
+                       - ES_JAVA_OPTS=-Xms2g -Xmx30g
+                       - xpack.security.enabled=false
+                       - cluster.routing.allocation.disk.watermark.low=30mb
+                       - cluster.routing.allocation.disk.watermark.high=20mb
+                       - cluster.routing.allocation.disk.watermark.flood_stage=10mb
+                       - cluster.info.update.interval=1m
+               volumes:
+                       - ./es_data:/usr/share/elasticsearch/data 
+               networks:
+                       - dblplink
+      
         banerjee_arefa_dblplink_api:
                 build:
                         context: ./reranker
