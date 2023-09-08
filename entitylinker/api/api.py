@@ -28,7 +28,8 @@ from flask_caching import Cache
 
 config = {
             "CACHE_TYPE": "SimpleCache",
-            "CACHE_DEFAULT_TIMEOUT": 0
+            "CACHE_DEFAULT_TIMEOUT": 922337203685477580,
+            "CACHE_THRESHOLD": 100000
          }
 
 app = Flask(__name__)
