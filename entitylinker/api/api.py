@@ -24,12 +24,19 @@ sys.path.insert(0, './utils/')
 from utils import *
 
 from flask import Flask, request, jsonify
+from flask_caching import Cache
+
+config = {
+            "CACHE_TYPE": "SimpleCache",
+            "CACHE_DEFAULT_TIMEOUT": 0
+         }
 
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-
+app.config.from_mapping(config)
+cache = Cache(app)
 
 #Below is reranker code
 
@@ -182,6 +189,7 @@ models, tokenizers = setup_models(models_names)
 print("Models loaded.")
 
 @app.route('/api/entitylinker/<modelname>/<embedding>', methods=['POST'])
+@cache.cached()
 def receive_json(modelname, embedding):
     try:
         # Get the JSON data from the request
