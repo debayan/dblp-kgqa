@@ -24,20 +24,12 @@ sys.path.insert(0, './utils/')
 from utils import *
 
 from flask import Flask, request, jsonify
-from flask_caching import Cache
 
-config = {
-            "CACHE_TYPE": "SimpleCache",
-            "CACHE_DEFAULT_TIMEOUT": 922337203685477580,
-            "CACHE_THRESHOLD": 100000
-         }
-
+cache = {}
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-app.config.from_mapping(config)
-cache = Cache(app)
 
 #Below is reranker code
 
@@ -67,8 +59,8 @@ class SiameseNetwork(nn.Module):
 print("Loading reranker models ...")
 sentmodel = SentenceTransformer('bert-base-nli-mean-tokens')
 reranker_model = {}
-es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
-#es = Elasticsearch("http://localhost:2200/")
+#es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
+es = Elasticsearch("http://localhost:2200/")
 
 reranker_model['transe'] = SiameseNetwork()
 reranker_model_transe_path = "models/reranker/model_transe_1/model_epoch_4.pth"
@@ -190,7 +182,6 @@ models, tokenizers = setup_models(models_names)
 print("Models loaded.")
 
 @app.route('/api/entitylinker/<modelname>/<embedding>', methods=['POST'])
-@cache.cached()
 def receive_json(modelname, embedding):
     try:
         # Get the JSON data from the request
@@ -199,6 +190,9 @@ def receive_json(modelname, embedding):
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
         question = data["question"]
+        cache_key = question+modelname+embedding
+        if cache_key in cache:
+            return jsonify(cache[cache_key]), 200
         predicted = infer(question, models[modelname],tokenizers[modelname])
         ents = separate_ents(predicted[0])
         allresults = []
@@ -209,6 +203,7 @@ def receive_json(modelname, embedding):
         # Process the JSON data as needed
         # For demonstration purposes, let's just return the received JSON
         print(jsonify({'question':question,'predictedlabelspans':predicted, 'entitylinkingresults':allresults}))
+        cache[cache_key] = {'question':question,'predictedlabelspans':predicted, 'entitylinkingresults':allresults}
         return jsonify({'question':question,'predictedlabelspans':predicted, 'entitylinkingresults':allresults}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
