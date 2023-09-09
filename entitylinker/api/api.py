@@ -92,7 +92,7 @@ def label_search_es(label, enttype):
 
         entities = []
         for source in resp['hits']['hits']:
-            entities.append([source['_source']['entity'], source['_source']['label'].replace('"','')])
+            entities.append([source['_source']['entity'], source['_source']['label'].replace('"',''), source['_score']])
         return entities
     except Exception as err:
         print(err)
@@ -113,22 +113,28 @@ def fetchembedding(entid,embedding):
         print(err)
         return []
 
-def link(question, label, entity_type, modeltype='transe'):
+def link(question, label, entity_type, modeltype='nosort'):
     candidate_entities_labels = label_search_es(label, entity_type)
-    candidate_embeddings = [fetchembedding(x[0], modeltype) for x in candidate_entities_labels]
-    question_encoding = list(sentmodel.encode([question])[0])+ 201*[0.0]
-    question_embedding = reranker_model[modeltype](torch.tensor(question_encoding))
-
-    candidate_encodings = [list(sentmodel.encode([x[1]])[0])+candidate_embeddings[idx]+[fuzz.token_set_ratio(x[1],question)/100.0]  for idx,x in enumerate(candidate_entities_labels)]
-    candidate_embeddings = [reranker_model[modeltype](torch.tensor(x)) for x in candidate_encodings]
-    arr = []
-    for idx,candidate_embedding in enumerate(candidate_embeddings):
-        distance = torch.norm(question_embedding - candidate_embedding, p=2)
-        arr.append([distance.item(),candidate_entities_labels[idx]])
-    arr = remove_duplicates(arr)
-    sorted_entities =  sorted(arr, key=lambda d: d[0])
-    print(sorted_entities)
-    return sorted_entities
+    if modeltype != 'nosort':
+        candidate_embeddings = [fetchembedding(x[0], modeltype) for x in candidate_entities_labels]
+        question_encoding = list(sentmodel.encode([question])[0])+ 201*[0.0]
+        question_embedding = reranker_model[modeltype](torch.tensor(question_encoding))
+    
+        candidate_encodings = [list(sentmodel.encode([x[1]])[0])+candidate_embeddings[idx]+[fuzz.token_set_ratio(x[1],question)/100.0]  for idx,x in enumerate(candidate_entities_labels)]
+        candidate_embeddings = [reranker_model[modeltype](torch.tensor(x)) for x in candidate_encodings]
+        arr = []
+        for idx,candidate_embedding in enumerate(candidate_embeddings):
+            distance = torch.norm(question_embedding - candidate_embedding, p=2)
+            arr.append([distance.item(),candidate_entities_labels[idx]])
+        arr = remove_duplicates(arr)
+        sorted_entities =  sorted(arr, key=lambda d: d[0])
+        print(sorted_entities)
+        return sorted_entities
+    else:
+        arr = [[x[2],x[:2]] for x in candidate_entities_labels]
+        arr = remove_duplicates(arr)
+        arr = sorted(arr, key=lambda d: d[0], reverse = True)
+        return arr
 
 #Above this is reranker code
 #Below is label span model and code
