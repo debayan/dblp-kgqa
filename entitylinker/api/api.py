@@ -26,6 +26,10 @@ from utils import *
 
 from flask import Flask, request, jsonify
 
+device = 'cpu'
+if torch.cuda.is_available():
+    device = 'cuda'
+
 cache = {}
 t5_cache = {}
 
@@ -64,7 +68,7 @@ print("Loading reranker models ...")
 sentmodel = SentenceTransformer('bert-base-nli-mean-tokens')
 reranker_model = {}
 #es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
-es = Elasticsearch("http://localhost:2200/")
+es = Elasticsearch("http://ltcpu2:2200/")
 
 reranker_model['transe'] = SiameseNetwork()
 reranker_model_transe_path = "models/reranker/model_transe_1/model_epoch_4.pth"
@@ -173,12 +177,11 @@ def link(question, label, entity_type, modeltype='nosort'):
 #Above this is reranker code
 #Below is label span model and code
 
-
-def setup_models(model_names):
+def setup_models(model_names, device='cuda'):
     models = {}
     tokenizers = {}
     for model_name in model_names:
-        model = T5ForConditionalGeneration.from_pretrained(model_name, return_dict = True)
+        model = T5ForConditionalGeneration.from_pretrained(model_name, return_dict = True).to(device)
         tokenizer = T5Tokenizer.from_pretrained(model_name)
         models[model_name] = model
         tokenizers[model_name] = tokenizer
@@ -186,11 +189,11 @@ def setup_models(model_names):
         load_model(output_dir, models[model_name], 'model_{}.pth'.format(model_name))
     return models, tokenizers
 
-def infer(question, _model, _tokenizer):
+def infer(question, _model, _tokenizer, device='cuda'):
     # Tokenize
-    input_question = _tokenizer.encode_plus(question, padding=True, truncation=True, return_tensors='pt')
+    input_question = _tokenizer.encode_plus(question, padding=True, truncation=True, return_tensors='pt').to(device)
     # Generate answer containing label and type
-    output = _model.generate(input_ids=input_question['input_ids'], attention_mask=input_question['attention_mask'], max_length=512)
+    output = _model.generate(input_ids=input_question['input_ids'], attention_mask=input_question['attention_mask'], max_length=512).to(device)
     predicted = [_tokenizer.decode(ids, skip_special_tokens=True, clean_up_tokenization_spaces=True) for ids in output]
     return predicted
 
@@ -218,7 +221,7 @@ def get_labels_types(ents):
 
 models_names = ["t5-small", "t5-base"]
 print("Loading labelspan models ...")
-models, tokenizers = setup_models(models_names)
+models, tokenizers = setup_models(models_names, device='cuda')
 print("Models loaded.")
 
 @app.route('/api/entitylinker/<modelname>/<embedding>', methods=['POST'])
@@ -238,7 +241,7 @@ def receive_json(modelname, embedding):
         if t5_cache_key in t5_cache:
             predicted = t5_cache[t5_cache_key]
         else:
-            predicted = infer(question, models[modelname],tokenizers[modelname])
+            predicted = infer(question, models[modelname],tokenizers[modelname], device='cuda')
             t5_cache[t5_cache_key] = predicted
         ents = separate_ents(predicted[0])
         allresults = []
