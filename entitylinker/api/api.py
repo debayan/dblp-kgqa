@@ -15,6 +15,7 @@ from transformers import (
 )
 import torch.nn as nn
 from sentence_transformers import SentenceTransformer
+from collections import OrderedDict
 from flask import Flask, request, jsonify
 from elasticsearch import Elasticsearch
 from fuzzywuzzy import fuzz
@@ -26,7 +27,10 @@ from utils import *
 from flask import Flask, request, jsonify
 
 cache = {}
+t5_cache = {}
+
 app = Flask(__name__)
+
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -59,8 +63,8 @@ class SiameseNetwork(nn.Module):
 print("Loading reranker models ...")
 sentmodel = SentenceTransformer('bert-base-nli-mean-tokens')
 reranker_model = {}
-es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
-#es = Elasticsearch("http://localhost:2200/")
+#es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
+es = Elasticsearch("http://localhost:2200/")
 
 reranker_model['transe'] = SiameseNetwork()
 reranker_model_transe_path = "models/reranker/model_transe_1/model_epoch_4.pth"
@@ -78,12 +82,21 @@ reranker_model['complex'].load_state_dict(torch.load(reranker_model_complex_path
 reranker_model['complex'].eval()
 print("Loaded reranker models")
 
-def remove_duplicates(array_of_arrays):
-    unique_arrays = list(set((inner_array[0],inner_array[1][0],inner_array[1][1]) for inner_array in array_of_arrays))
-    unique_arrays_final = [[inner_array[0],[inner_array[1],inner_array[2]]] for inner_array in unique_arrays]
-    return unique_arrays_final
 
+def remove_duplicate_arrays(array_of_arrays):
+    unique_arrays = []
+    seen_arrays = OrderedDict()
 
+    for array in array_of_arrays:
+        # Convert each inner array to a tuple to make it hashable
+        array_tuple = tuple(array)
+
+        # Check if the tuple version of the array has been seen before
+        if array_tuple not in seen_arrays:
+            unique_arrays.append(array)
+            seen_arrays[array_tuple] = None
+
+    return unique_arrays
 def label_search_es(label, enttype):
     try:
         enttypes = ["https://dblp.org/rdf/schema#"+x for x in enttype]
@@ -92,7 +105,7 @@ def label_search_es(label, enttype):
 
         entities = []
         for source in resp['hits']['hits']:
-            entities.append([source['_source']['entity'], source['_source']['label'].replace('"',''), source['_score']])
+            entities.append([source['_source']['entity'], source['_source']['label'].replace('"','')])#, source['_score']])
         return entities
     except Exception as err:
         print(err)
@@ -113,9 +126,33 @@ def fetchembedding(entid,embedding):
         print(err)
         return []
 
+def topduplicatelabel(candidate_entities_labels):
+    toplabel = candidate_entities_labels[0][1]
+    alllabels = [x[1] for x in candidate_entities_labels]
+    count = alllabels.count(toplabel)
+    if count > 1:
+        print(alllabels)
+        print(candidate_entities_labels)
+        print("DUPLICATE found")
+        return True
+    else:
+        return False
+
+
 def link(question, label, entity_type, modeltype='nosort'):
     candidate_entities_labels = label_search_es(label, entity_type)
-    if modeltype != 'nosort':
+    if not candidate_entities_labels:
+        return []
+    print(candidate_entities_labels)
+    candidate_entities_labels = remove_duplicate_arrays(candidate_entities_labels)
+    print(candidate_entities_labels)
+    print("====================")
+    if modeltype == 'nosort':
+        arr = [[-1,x[:2]] for x in candidate_entities_labels]
+        return arr
+    if (modeltype != 'nosort' and topduplicatelabel(candidate_entities_labels)) or ('pure' in modeltype) :
+        if 'pure' in modeltype:
+            modeltype = modeltype.split('-')[0]
         candidate_embeddings = [fetchembedding(x[0], modeltype) for x in candidate_entities_labels]
         question_encoding = list(sentmodel.encode([question])[0])+ 201*[0.0]
         question_embedding = reranker_model[modeltype](torch.tensor(question_encoding))
@@ -126,14 +163,11 @@ def link(question, label, entity_type, modeltype='nosort'):
         for idx,candidate_embedding in enumerate(candidate_embeddings):
             distance = torch.norm(question_embedding - candidate_embedding, p=2)
             arr.append([distance.item(),candidate_entities_labels[idx]])
-        arr = remove_duplicates(arr)
         sorted_entities =  sorted(arr, key=lambda d: d[0])
         print(sorted_entities)
         return sorted_entities
     else:
-        arr = [[x[2],x[:2]] for x in candidate_entities_labels]
-        arr = remove_duplicates(arr)
-        arr = sorted(arr, key=lambda d: d[0], reverse = True)
+        arr = [[-1,x[:2]] for x in candidate_entities_labels]
         return arr
 
 #Above this is reranker code
@@ -199,7 +233,13 @@ def receive_json(modelname, embedding):
         cache_key = question+modelname+embedding
         if cache_key in cache:
             return jsonify(cache[cache_key]), 200
-        predicted = infer(question, models[modelname],tokenizers[modelname])
+        t5_cache_key = question+modelname
+        predicted = []       
+        if t5_cache_key in t5_cache:
+            predicted = t5_cache[t5_cache_key]
+        else:
+            predicted = infer(question, models[modelname],tokenizers[modelname])
+            t5_cache[t5_cache_key] = predicted
         ents = separate_ents(predicted[0])
         allresults = []
         labels, types = get_labels_types(ents)
@@ -212,6 +252,7 @@ def receive_json(modelname, embedding):
         cache[cache_key] = {'question':question,'predictedlabelspans':predicted, 'entitylinkingresults':allresults}
         return jsonify({'question':question,'predictedlabelspans':predicted, 'entitylinkingresults':allresults}), 200
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
