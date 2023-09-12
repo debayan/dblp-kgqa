@@ -67,8 +67,8 @@ class SiameseNetwork(nn.Module):
 print("Loading reranker models ...")
 sentmodel = SentenceTransformer('bert-base-nli-mean-tokens')
 reranker_model = {}
-#es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
-es = Elasticsearch("http://ltcpu2:2200/")
+es = Elasticsearch("http://banerjee_arefa_dblplink_elasticsearch:9200/")
+#es = Elasticsearch("http://ltcpu2:2200/")
 
 reranker_model['transe'] = SiameseNetwork()
 reranker_model_transe_path = "models/reranker/model_transe_1/model_epoch_4.pth"
