@@ -26,10 +26,6 @@ from utils import *
 
 from flask import Flask, request, jsonify
 
-device = 'cpu'
-if torch.cuda.is_available():
-    device = 'cuda'
-
 cache = {}
 t5_cache = {}
 
@@ -177,7 +173,9 @@ def link(question, label, entity_type, modeltype='nosort'):
 #Above this is reranker code
 #Below is label span model and code
 
-def setup_models(model_names, device='cuda'):
+def setup_models(model_names, device='cpu'):
+    if torch.cuda.is_available():
+        device = 'cuda'
     models = {}
     tokenizers = {}
     for model_name in model_names:
@@ -189,7 +187,9 @@ def setup_models(model_names, device='cuda'):
         load_model(output_dir, models[model_name], 'model_{}.pth'.format(model_name))
     return models, tokenizers
 
-def infer(question, _model, _tokenizer, device='cuda'):
+def infer(question, _model, _tokenizer, device='cpu'):
+    if torch.cuda.is_available():
+        device = 'cuda'
     # Tokenize
     input_question = _tokenizer.encode_plus(question, padding=True, truncation=True, return_tensors='pt').to(device)
     # Generate answer containing label and type
@@ -221,7 +221,7 @@ def get_labels_types(ents):
 
 models_names = ["t5-small", "t5-base"]
 print("Loading labelspan models ...")
-models, tokenizers = setup_models(models_names, device='cuda')
+models, tokenizers = setup_models(models_names)
 print("Models loaded.")
 
 @app.route('/api/entitylinker/<modelname>/<embedding>', methods=['POST'])
@@ -241,7 +241,7 @@ def receive_json(modelname, embedding):
         if t5_cache_key in t5_cache:
             predicted = t5_cache[t5_cache_key]
         else:
-            predicted = infer(question, models[modelname],tokenizers[modelname], device='cuda')
+            predicted = infer(question, models[modelname],tokenizers[modelname])
             t5_cache[t5_cache_key] = predicted
         ents = separate_ents(predicted[0])
         allresults = []
