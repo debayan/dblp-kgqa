@@ -67,7 +67,8 @@ def types_to_str(typs):
     return typs_str
 
 def display_table(res):
-    df_final = pd.DataFrame(columns=("Label", "Types", "Distance", "Entity"))
+    #df_final = pd.DataFrame(columns=("Label", "Types", "Distance", "Entity"))
+    df_final = pd.DataFrame(columns=("Label", "Types",  "Entity"))
     for idx,entitylinkingresult in enumerate(res['responses']['entitylinkingresults']):
         label = entitylinkingresult['label']
         typs = entitylinkingresult['type']
@@ -78,8 +79,10 @@ def display_table(res):
         ent_label = resp_json[0][1][1]
         link_str = link + ":::" + ent_label
         types_str = types_to_str(typs)
-        obj = {"Label": ent_label, "Types": types_str, "Distance": dist, "Entity": link_str}
-        df = pd.DataFrame(obj, columns=("Label", "Types", "Distance", "Entity"), index=[0])
+        #obj = {"Label": ent_label, "Types": types_str, "Distance": dist, "Entity": link_str}
+        obj = {"Label": ent_label, "Types": types_str, "Entity": link_str}
+        #df = pd.DataFrame(obj, columns=("Label", "Types", "Distance", "Entity"), index=[0])
+        df = pd.DataFrame(obj, columns=("Label", "Types", "Entity"), index=[0])
         df_final = pd.concat([df_final, df], ignore_index=True)
     df_final['Entity'] = df_final['Entity'].apply(make_clickable)
     st.write(df_final.to_html(escape = False, index=False, justify='center'), unsafe_allow_html = True)
@@ -96,7 +99,8 @@ def display_res(res):
         for i in range(len(links)):
             link_str = links[i] + ":::" + ent_labels[i]
             link_strs.append(link_str)
-        df = pd.DataFrame((list(zip(dists, link_strs))), columns=("Distance", "Entity"))
+        #df = pd.DataFrame((list(zip(dists, link_strs))), columns=("Distance", "Entity"))
+        df = pd.DataFrame((list( link_strs)), columns=( "Entity",))
         df['Entity'] = df['Entity'].apply(make_clickable)
         st.write(df.to_html(escape = False), unsafe_allow_html = True)
         st.divider()
